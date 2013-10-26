@@ -1,0 +1,189 @@
+
+// Three clock sketches for the Ardcore Expander
+// Feed a clock in "Clock in" and set A0 full CCW for "Cycle Program", at noon for "Halves Program" or full CW for "Divider Program".
+// There is a 1 second signal as the program is changed.
+// Written by: Magnus Gyllensward
+//
+// Next revision: Randomization
+
+const int clkIn = 2;           // the digital (clock) input
+const int digPin[2] = {3,4};  // the digital output pins
+const int pinOffset = 5;       // the first DAC pin (from 5-12)
+const int trigTime = 10;       // triggers are 10 ms.
+
+//  variables for interrupt handling of the clock input
+volatile int clkState = LOW;
+
+int cycleCounter = 0;
+int halvesCounter = 1;
+int dividerCounter = 1;
+
+int indicator1 = 0;
+int indicator2 = 0;
+int indicator3 = 0;
+
+// program controlled with A0 e.g. program 1 = from 0 to 300.
+int program1 = 300;
+int program2 = 600;
+int program3 = 9999;
+
+
+//  ==================== start of setup() ======================
+
+void setup() {
+  Serial.begin(9600);
+  
+  // set up the digital (clock) input
+  pinMode(clkIn, INPUT);
+  
+  // set up the digital outputs
+  for (int i=0; i<2; i++) {
+    pinMode(digPin[i], OUTPUT);
+    digitalWrite(digPin[i], LOW);
+  }
+  
+  // set up the 8-bit DAC output pins
+  for (int i=0; i<8; i++) {
+    pinMode(pinOffset+i, OUTPUT);
+    digitalWrite(pinOffset+i, LOW);
+  }
+  
+  attachInterrupt(0, isr, RISING);
+}
+
+//  ==================== start of loop() =======================
+void loop() {
+
+  if (clkState == HIGH) {
+    clkState = LOW;  // reset for the next clock
+   
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //   Cycle (program 1)
+    //
+        
+    if (analogRead(0) < program1) {
+          
+      // Change of program signal
+      if (indicator1 == 0) { for (int i=0; i<8; i++) { pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, HIGH);}
+      delay(1000); for (int i=0; i<8; i++) { pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, LOW);}}
+      indicator1 = 1; indicator2 = 0; indicator3 = 0;
+        
+      for(int i=0; i<8; i++) {
+        if (cycleCounter==i) {
+          Serial.print("Step through: ");          
+          Serial.println(i);  
+          digitalWrite(pinOffset+i, HIGH);
+          delay(1); // to let the LED's show
+          digitalWrite(pinOffset+i, LOW);
+        }
+      }
+      
+      if (cycleCounter<7) { 
+        cycleCounter++;
+      }
+      
+      else {
+        cycleCounter=0;
+      }
+      
+    } // Program 1
+       
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //   Halves (Program 2)  
+    //
+    
+     if (analogRead(0) > (program1+1) && analogRead(0) < program2) {  
+     
+      // Change of program signal
+      if (indicator2 == 0) { for (int i=0; i<8; i++) { pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, HIGH);}
+      delay(1000); for (int i=0; i<8; i++) { pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, LOW);}}
+      indicator1 = 0; indicator2 = 1; indicator3 = 0;
+    
+       for (int i=0; i<128; i++) {
+        digitalWrite(pinOffset+0, HIGH);
+         
+        if ((halvesCounter) % 2 == 0) { 
+          digitalWrite(pinOffset+1, HIGH);
+        }
+        if ((halvesCounter) % 4 == 0) { 
+          digitalWrite(pinOffset+2, HIGH);
+        }
+        if ((halvesCounter) % 8 == 0) { 
+          digitalWrite(pinOffset+3, HIGH);
+        }
+        if ((halvesCounter) % 16 == 0) { 
+          digitalWrite(pinOffset+4, HIGH);
+        }
+        if ((halvesCounter) % 32 == 0) { 
+          digitalWrite(pinOffset+5, HIGH);
+        }
+        if ((halvesCounter) % 64 == 0) { 
+          digitalWrite(pinOffset+6, HIGH);
+        }
+        if ((halvesCounter) % 128 == 0) { 
+          digitalWrite(pinOffset+7, HIGH);
+        }
+      
+         for (int i=0; i<8; i++) {
+          digitalWrite(pinOffset+i, LOW);
+         }
+       }
+              
+      if (halvesCounter<128) { 
+        halvesCounter++;
+      }
+      
+      else {
+        halvesCounter=1;
+      }
+    } // Program 2
+     
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //   Divider (Program 3)   
+    //
+    
+    if (analogRead(0) > (program2+1) && analogRead(0) < program3) {  // knob setting to tune in program
+    
+      // Change of program signal
+      if (indicator3 == 0) { for (int i=0; i<8; i++) { pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, HIGH);}
+      delay(1000); for (int i=0; i<8; i++) { pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, LOW);}}
+      indicator1 = 0; indicator2 = 0; indicator3 = 1;
+    
+      for (int i=1; i<9; i++) {
+        if (dividerCounter % i == 0) { 
+          digitalWrite(pinOffset+(i-1), HIGH);
+          delay(1); // to let the LED's show
+          digitalWrite(pinOffset+(i-1), LOW);
+        }
+      }  
+    
+      dividerCounter++;
+      
+    } // program 3
+  } // end if clock state high
+} // end loop
+
+//  =================== convenience routines ===================
+//  isr() - quickly handle interrupts from the clock input
+//  ------------------------------------------------------
+void isr()
+{
+  // Note: you don't want to spend a lot of time here, because
+  // it interrupts the activity of the rest of your program.
+  // In most cases, you just want to set a variable and get
+  // out.
+  clkState = HIGH;
+}
+
+//  dacOutput(byte) - deal with the DAC output
+//  -----------------------------------------
+void dacOutput(byte v)
+{
+  PORTB = (PORTB & B11100000) | (v >> 3);
+	PORTD = (PORTD & B00011111) | ((v & B00000111) << 5);
+}
+
+//  ===================== end of program =======================
