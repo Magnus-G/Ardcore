@@ -78,9 +78,13 @@ void setup() {
 //  ==================== start of loop() =======================
 void loop() {
 
-  if (clkState == HIGH) {
+  if ((clkState == HIGH && (analogRead(1) < 10)) || (11 < analogRead(1))) {
     clkState = LOW;  // reset for the next clock
-   
+    
+    if (11 < analogRead(1)) {
+      delay(1023 - analogRead(1));
+    }
+    
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     //   Cycle (program 1)
