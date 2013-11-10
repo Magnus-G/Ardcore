@@ -1,6 +1,7 @@
 
 // Clock and drum pattern sketches for the Ardcore Expander
 // Feed a clock in "Clock in" for external beat. Set A1 to more than 0 for internal beat.
+// The clock in toggles between D0 and D1 to open and close.
 // Programs are set with A0. 1, 2, 3... etc from CCW to CW
 // 1. Cycle Program 
 // 2. Halves Program
@@ -9,8 +10,6 @@
 // A2 controls probablility of output for triggers. Set A2 full CCW for no randomization and turn it CW for increased "drop out" of trig outs. 
 // There is a 1 second signal as the program is changed.
 // Written by: Magnus Gyllensward
-
-#include <drums.ino>
 
 const int clkIn = 2;           // the digital (clock) input
 const int digPin[2] = {3,4};  // the digital output pins
@@ -38,7 +37,12 @@ int program2 = 500;
 int program3 = 750;
 int program4 = 9999;
 
+// randomization/probability
 int randValue = 1023;
+
+// for the on/off switch on clock in
+int inputIsHigh = 0;
+int digState[2] = {LOW, LOW};  // start with both set low
 
 // drums [z][y][x]
 int drums[2][8][16] = {
@@ -56,7 +60,7 @@ int drums[2][8][16] = {
   {
   // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
     {1, 1, 0, 0, 0, 0, 0, 0,  1, 1, 0, 0, 0, 0, 0, 0},
-    {0, 0, 1, 0, 0, 0, 1, 0,  0, 0, 1, 0, 0, 0, 1, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0,  0, 0, 1, 0, 0, 0, 0, 0},
     {0, 1, 0, 1, 0, 1, 0, 1,  0, 1, 0, 1, 0, 1, 0, 1},
     {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
@@ -124,11 +128,31 @@ void setup() {
 void loop() {
 
   if ((clkState == HIGH && (analogRead(1) < 10)) || (11 < analogRead(1))) { // if A1 is fully CCW and there's a input beat on clock in OR if A1 is above CCW
-    clkState = LOW;  // reset for the next clock
-    
+
     if (11 < analogRead(1) && indicator[3] != 1) { // if A1 is above CCW AND you are not running the drum program (that clocks itself internally)
       delay(1023 - analogRead(1)); // run without external clock. i.e. add a delay from A1 and keep firing triggers.
     }
+    
+    // send a trig to "clock in" to get D0 and D1 to switch back and forth with open gates
+    if (clkState == HIGH) {
+      if (inputIsHigh == 0) {
+        digState[0] = HIGH;
+        digitalWrite(digPin[0], HIGH);
+              digitalWrite(digPin[1], LOW);
+        dacOutput(analogRead(1));
+        ++inputIsHigh;
+      }
+      
+      else {
+        digState[0] = LOW;
+        digitalWrite(digPin[0], LOW);
+              digitalWrite(digPin[1], HIGH);
+        dacOutput(analogRead(0));
+        --inputIsHigh;
+      }
+    }
+    
+    clkState = LOW;  // reset for the next clock
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
