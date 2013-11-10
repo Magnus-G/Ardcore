@@ -1,11 +1,16 @@
 
-// Three clock sketches for the Ardcore Expander
-// Feed a clock in "Clock in" and set A0 full CCW for "Cycle Program", at noon for "Halves Program" or full CW for "Divider Program".
+// Clock and drum pattern sketches for the Ardcore Expander
+// Feed a clock in "Clock in" for external beat. Set A1 to more than 0 for internal beat.
+// Programs are set with A0. 1, 2, 3... etc from CCW to CW
+// 1. Cycle Program 
+// 2. Halves Program
+// 3. Divider Program
+// 4. Drum Program      Use A3 to set different drum patterns
 // A2 controls probablility of output for triggers. Set A2 full CCW for no randomization and turn it CW for increased "drop out" of trig outs. 
 // There is a 1 second signal as the program is changed.
 // Written by: Magnus Gyllensward
-//
-// Next revision: Randomization
+
+#include <drums.ino>
 
 const int clkIn = 2;           // the digital (clock) input
 const int digPin[2] = {3,4};  // the digital output pins
@@ -25,30 +30,70 @@ int halves[8] = {1, 2, 4, 8, 16, 32, 64, 128};
 //int indicator2 = 0;
 //int indicator3 = 0;
 
-int indicator[3] = {0,0,0};
+int indicator[4] = {0,0,0,0}; // for the "change program signal"
 
 // program controlled with A0 e.g. program 1 = from 0 to 300.
-int program1 = 300;
-int program2 = 600;
-int program3 = 9999;
+int program1 = 250;
+int program2 = 500;
+int program3 = 750;
+int program4 = 9999;
 
 int randValue = 1023;
 
+// drums [z][y][x]
+int drums[2][8][16] = {
+  {
+  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
+    {1, 0, 0, 0, 0, 1, 0, 0,  1, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 1, 0, 0, 0, 1, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 1, 0, 1, 0, 1, 0, 1,  0, 1, 0, 1, 0, 1, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+  },
+  {
+  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
+    {1, 1, 0, 0, 0, 0, 0, 0,  1, 1, 0, 0, 0, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 1, 0,  0, 0, 1, 0, 0, 0, 1, 0},
+    {0, 1, 0, 1, 0, 1, 0, 1,  0, 1, 0, 1, 0, 1, 0, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+  }
+};
+//{
+//// 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//  {1, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0},
+//}
+
+
 // Functions
 void programChangeSignal(int x) {    
-  if (indicator[x-1] == 0) { 
+  if (indicator[x-1] == 0) { // if the the new program is not already active, let's signal that this is a new program...
     for (int i=0; i<8; i++) { 
-      pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, HIGH);
+      pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, HIGH); // turn on all triggers for a while to signal program change
     }
-    delay(1000); 
+    delay(1000); // duration of signal
     for (int i=0; i<8; i++) { 
-      pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, LOW);
+      pinMode(pinOffset+i, OUTPUT); digitalWrite(pinOffset+i, LOW); // turn off
     }
   }
-  for (int y=0; y<3; y++) {
-    indicator[y] = 0;
+  
+  for (int y=0; y<4; y++) {
+    indicator[y] = 0; // reset all indicators 
   }
-  indicator[x-1] = 1; 
+  indicator[x-1] = 1; // set the current program indicator to 1 i.e. ON
 }
 
 
@@ -78,11 +123,11 @@ void setup() {
 //  ==================== start of loop() =======================
 void loop() {
 
-  if ((clkState == HIGH && (analogRead(1) < 10)) || (11 < analogRead(1))) {
+  if ((clkState == HIGH && (analogRead(1) < 10)) || (11 < analogRead(1))) { // if A1 is fully CCW and there's a input beat on clock in OR if A1 is above CCW
     clkState = LOW;  // reset for the next clock
     
-    if (11 < analogRead(1)) {
-      delay(1023 - analogRead(1));
+    if (11 < analogRead(1) && indicator[3] != 1) { // if A1 is above CCW AND you are not running the drum program (that clocks itself internally)
+      delay(1023 - analogRead(1)); // run without external clock. i.e. add a delay from A1 and keep firing triggers.
     }
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +219,32 @@ void loop() {
       dividerCounter++;
       
     } // program 3
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //   Drums (Program 4)   
+    
+    
+    if (analogRead(0) > (program3+1) && analogRead(0) < program4) {  // knob setting to tune in program
+    
+      programChangeSignal(4);
+      
+      int drumProgram = (analogRead(3) / 100); // (0 - 1023)/100 -> integer between 0 and 10
+
+    
+      // go through drum matrix
+      for (int x=1; x<17; x++) { // temporal. start with first beat point...
+        for (int y=1; y<9; y++) { // vertical, outputs. start with output 0...
+          randValue = random(0, 1023);
+          if (randValue > analogRead(2)) {     
+            digitalWrite(pinOffset+(y-1), drums[drumProgram][y-1][x-1]);
+            delay(1); // to let the LED's show
+            digitalWrite(pinOffset+(y-1), LOW);
+          }          
+        }
+        delay(1023 - analogRead(1)); // delay after each beat
+      }
+    } // program 4
   } // end if clock state high
 } // end loop
 
