@@ -11,6 +11,8 @@
 // There is a 1 second signal as the program is changed.
 // Written by: Magnus Gyllensward
 
+// the drumPatterns.h file must be in the same folder as this file when compiling.
+#include "drumPatterns.h";
 
 const int clkIn = 2;           // the digital (clock) input
 const int digPin[2] = {3,4};  // the digital output pins
@@ -25,10 +27,6 @@ int dividerCounter = 1;
 
 int halvesCounter = 1;
 int halves[8] = {1, 2, 4, 8, 16, 32, 64, 128};
-
-//int indicator1 = 0;
-//int indicator2 = 0;
-//int indicator3 = 0;
 
 int indicator[4] = {0,0,0,0}; // for the "change program signal"
 
@@ -45,69 +43,9 @@ int randValue = 1023;
 int inputIsHigh = 0;
 int digState[2] = {LOW, LOW};  // start with both set low
 
+// counting drumloops. see drums.h for all drum patterns
 int drumLoops = 0;
-// drums [z][y][x]
-int const noOfDrumPrograms = 5;
-int const noOfDrumSteps = 8;
-int drums[noOfDrumPrograms][6][16] = {
-  { // 0. straight
-  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
-    {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
-    {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0}, // synchopation
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  },
-  { // 1. double bd start
-  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
-    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}, 
-    {0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0}, // synchopation   
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  },
-  { // 2. double bd and sn
-  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
-    {1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0},
-    {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0},
-    {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0}, // synchopation
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  },
-  { // 3. 
-  // 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8
-    {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
-    {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
-    {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, // synchopation
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  },
-  { // 4. 
-  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
-    {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0},
-    {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1}, // synchopation
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  }  
-};
-
-
-//  { // 
-//  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // synchopation
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-//  }  
-
+int drumDivision[6] = {1, 2, 4, 8, 16, 32};    
 
 // Functions
 void programChangeSignal(int x) {    
@@ -165,16 +103,14 @@ void loop() {
       if (inputIsHigh == 0) {
         digState[0] = HIGH;
         digitalWrite(digPin[0], HIGH);
-              digitalWrite(digPin[1], LOW);
-        dacOutput(analogRead(1));
+        digitalWrite(digPin[1], LOW);
         ++inputIsHigh;
       }
       
       else {
         digState[0] = LOW;
         digitalWrite(digPin[0], LOW);
-              digitalWrite(digPin[1], HIGH);
-        dacOutput(analogRead(0));
+        digitalWrite(digPin[1], HIGH);
         --inputIsHigh;
       }
     }
@@ -219,7 +155,7 @@ void loop() {
     //
     
      if (analogRead(0) > (program1+1) && analogRead(0) < program2) {  
-     
+
       programChangeSignal(2);
     
        for (int i=0; i<128; i++) {
@@ -230,12 +166,10 @@ void loop() {
           
             if (randValue > analogRead(2)) {                   
               digitalWrite(pinOffset+x, HIGH);
+              digitalWrite(pinOffset+i, LOW);
             }
           } 
         } 
-       for (int i=0; i<8; i++) {
-        digitalWrite(pinOffset+i, LOW);
-       }
      }
               
       if (halvesCounter<128) { 
@@ -253,7 +187,7 @@ void loop() {
     
     
     if (analogRead(0) > (program2+1) && analogRead(0) < program3) {  // knob setting to tune in program
-    
+
       programChangeSignal(3);
     
       for (int i=1; i<9; i++) {
@@ -277,23 +211,29 @@ void loop() {
     
     
     if (analogRead(0) > (program3+1) && analogRead(0) < program4) {  // knob setting to tune in program
-    
+
       programChangeSignal(4);
       
-//      int drumProgram = ((analogRead(3) / 1000) * noOfDrumPrograms); // (0 - 1023)/100 -> integer between 0 and 10
       int drumProgram = (analogRead(3) / (1023/noOfDrumPrograms)); 
-      Serial.println(drumProgram);
-    
-    
+      if (drumProgram > 0) { // deal with zero indexing on addressing the array vs the integer declared to set the number.
+        drumProgram--;
+      }
+            Serial.println(drumProgram);
+            
       // go through drum matrix
       for (int x=1; x<17; x++) { // temporal. start with first beat point...
         for (int y=1; y<noOfDrumSteps; y++) { // vertical, outputs. start with output 0...
           randValue = random(0, 1023);
           if (randValue > analogRead(2)) {     
             digitalWrite(pinOffset+(y-1), drums[drumProgram][y-1][x-1]);
+            digitalWrite(pinOffset+(6), HIGH); // send one trigger per beat to output 6.
           }          
         }
-        delay((1023 - analogRead(1))/2); // delay after each beat == bpm
+  
+        // decide if beat is going to be double speed, double-double etc...  
+        int drumDivisionNo = ((analogRead(4) / 100)/2); //e.g. 1023/100 -> 10. 10/2 -> 5. Fifth place in the drumDivision array == 32 
+        delay((1023 - analogRead(1))/drumDivision[drumDivisionNo]); // delay after each beat == bpm
+ 
         for (int y=1; y<9; y++) { 
           digitalWrite(pinOffset+(y-1), LOW); // turn off triggers after each "drumLoops"
         }
