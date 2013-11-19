@@ -157,20 +157,18 @@ void loop() {
      if (analogRead(0) > (program1+1) && analogRead(0) < program2) {  
 
       programChangeSignal(2);
-    
-       for (int i=0; i<128; i++) {
         
-        for (int x=0; x<8; x++) {
-          if ((halvesCounter) % halves[x] == 0) { 
-          randValue = random(0, 1023);
-          
-            if (randValue > analogRead(2)) {                   
-              digitalWrite(pinOffset+x, HIGH);
-              digitalWrite(pinOffset+i, LOW);
-            }
-          } 
+      for (int x=0; x<8; x++) {
+        if ((halvesCounter) % halves[x] == 0) { 
+        randValue = random(0, 1023);
+        
+          if (randValue > analogRead(2)) {                   
+            digitalWrite(pinOffset+x, HIGH);
+            delay(1);
+            digitalWrite(pinOffset+x, LOW);
+          }
         } 
-     }
+      } 
               
       if (halvesCounter<128) { 
         halvesCounter++;
