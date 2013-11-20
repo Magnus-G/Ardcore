@@ -188,13 +188,13 @@ void loop() {
 
       programChangeSignal(3);
     
-      for (int i=1; i<9; i++) {
-        if (dividerCounter % i == 0) { 
+      for (int i=0; i<8; i++) {
+        if (dividerCounter % (i+1) == 0) { 
           randValue = random(0, 1023);
           if (randValue > analogRead(2)) {     
-            digitalWrite(pinOffset+(i-1), HIGH);
+            digitalWrite(pinOffset+(i), HIGH);
             delay(1); // to let the LED's show
-            digitalWrite(pinOffset+(i-1), LOW);
+            digitalWrite(pinOffset+(i), LOW);
           }
         }
       }  
