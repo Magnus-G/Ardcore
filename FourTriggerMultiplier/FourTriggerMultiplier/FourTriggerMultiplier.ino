@@ -118,7 +118,7 @@ void loop()
     clkState = 0;
   }
   
-  // the hits
+  // the extra hits
   if (queueReady) {
     for (int i=0; i<5; i++) {
       if (millis() - milli[i] > times[i]) { // time passed since the first trig out get to the time for "times"
