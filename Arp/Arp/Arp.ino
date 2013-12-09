@@ -1,4 +1,4 @@
-//#include <math.h>
+#include <math.h>
 //#include "drumPatterns.h";
 
 //  constants related to the Arduino Nano pin use
@@ -20,88 +20,49 @@ int previousNon0Position = 0;
 int currentDirection = 1;
 
 int scale;
-//int MAX_CHORD_LENGTH = 5;
 
-const int pattern1Length = 7;
-int pattern1Place = 0;
-int pattern1[pattern1Length] = {0,1,2,3,4,5,6};
-
-const int noOfPatterns = 2;
-int pattern[noOfPatterns][8] = {
-  {0,1,2,3,4,5,6,7},
-  {0,1,0,2,0,3,0,4}
-};
+const int noOfPatterns = 1; 
+const int patternLength = 8;
+int pattern[noOfPatterns][patternLength] = {{0,1,2,3,4,5,6,7}};
+int patternType;
+int patternTypeUtility = 1023 / noOfPatterns;
+int patternPlace = 0;
 
 const int noOfScales = 25;
+const int scaleLength = 8;
 int scaleUtility = 1023 / noOfScales;
-int scales[noOfScales][7] = {
+int scales[noOfScales][scaleLength] = {
 // Major. 12 scales
-{4,6,8,9,11,1,3},    // c major
-{6,8,10,11,1,3,5},   // d major
-{5,7,9,10,12,2,4},   // C#/Db
-{7,9,11,12,2,4,6},   // D#/Eb
-{8,10,12,1,3,5,7},   // E Major
-{9,11,1,2,4,6,8},    // F Major
-{10,12,2,3,5,7,9},   // F#/Gb
-{11,1,3,4,6,8,10},   // G Major
-{12,2,4,5,7,9,11},   // G#/Ab
-{1,3,5,6,8,10,12},   // A Major
-{2,4,6,7,9,11,1},    // A#/Bb
-{3,5,7,8,10,12,2},   // B Major
+{1,3,4,6,8,9,11,0},    // c major
+{6,8,10,11,1,3,5,0},   // d major
+{5,7,9,10,12,2,4,0},   // C#/Db
+{7,9,11,12,2,4,6,0},   // D#/Eb
+{8,10,12,1,3,5,7,0},   // E Major
+{9,11,1,2,4,6,8,0},    // F Major
+{10,12,2,3,5,7,9,0},   // F#/Gb
+{11,1,3,4,6,8,10,0},   // G Major
+{12,2,4,5,7,9,11,0},   // G#/Ab
+{1,3,5,6,8,10,12,0},   // A Major
+{2,4,6,7,9,11,1,0},    // A#/Bb
+{3,5,7,8,10,12,2,0},   // B Major
 
 // Minor. 12 scales. 
-{1,3,4,6,9,11,1},    // A Minor
-{2,4,5,7,9,10,12},   // A#/Bb
-{3,5,6,8,10,11,1},   // B Minor
-{5,6,8,10,12,1,3},   // C Minor
-{5,7,8,10,12,1,3},   // C#/Db
-{6,8,9,11,1,2,4},    // D Minor
-{7,9,10,12,2,3,5},   // D#/Eb
-{8,10,11,1,3,4,6},   // E Minor
-{9,11,12,2,4,5,7},   // F Minor
-{10,12,1,3,5,6,8},   // F#/Gb
-{11,1,2,4,6,7,9},    // G Minor
-{12,2,3,5,7,8,1},     // G#/Ab
+{1,3,4,6,9,11,1,0},    // A Minor
+{2,4,5,7,9,10,12,0},   // A#/Bb
+{3,5,6,8,10,11,1,0},   // B Minor
+{5,6,8,10,12,1,3,0},   // C Minor
+{5,7,8,10,12,1,3,0},   // C#/Db
+{6,8,9,11,1,2,4,0},    // D Minor
+{7,9,10,12,2,3,5,0},   // D#/Eb
+{8,10,11,1,3,4,6,0},   // E Minor
+{9,11,12,2,4,5,7,0},   // F Minor
+{10,12,1,3,5,6,8,0},   // F#/Gb
+{11,1,2,4,6,7,9,0},    // G Minor
+{12,2,3,5,7,8,1,0},     // G#/Ab
 
 // Pentatonic. 12 scales.
 {4,6,8,11,1,4,6}
 };
-
-
-
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,},
-//{,,,,,,}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//{6,8,9,11,1,2,4}, // d minor
-
-//int chords[12][5] = {{1,4,8,0,0}, {1,5,8,0,0}, {1,8,8,0,0}, {1,4,7,0,0}, {1,5,8,10,0}, {1,5,8,12,0}, {1,4,8,11,0}, {1,5,10,0,0},{1,5,8,11,0}, {1,5,8,15,0},{1,5,10,0,0}, {1,4,8,10,0}};
-//int pattern[4] = {0,1,2,3};
-
-//String chordName[12] = {"Major", };
-//int currentChord[5];
 
 ////////////////////////////////////////////////////////
 
@@ -124,10 +85,19 @@ void setup()
 }
 
 
+
+
+
+
+
+
+
 void loop() {
 
   scale = (analogRead(2) / scaleUtility) -1;
-  if (scale == -1) {scale = 0;}    
+  if (scale == -1) {scale = 0;}  
+  patternType = (analogRead(3) / patternTypeUtility) -1;
+  if (patternType == -1) {patternType = 0;}    
  
   digitalWrite(digPin[0], clkState);
   digitalWrite(digPin[1], clkState);  
@@ -135,23 +105,52 @@ void loop() {
   if (clkState == HIGH) {
     clkState = LOW;
  
-   if (pattern == 0) { // According to pattern
-       currentPosition = pattern1[pattern1Place];
-       pattern1Place++;
-       
-       if (pattern1Place >= (pattern1Length)) {
-        pattern1Place = 0; 
-       }    
-    }
+    currentPosition = pattern[0][patternPlace];
+    patternPlace++;
+   
+    if (patternPlace >= (patternLength)) {
+      patternPlace = 0; 
+    }    
 
     previousPosition = currentPosition;
+    if (scales[scale][currentPosition] == 0) { // if we are in the last position
+      
+      int note = scales[scale][0] * 3 + 3;
+      dacOutput(note);      
+    }
+    else {
+      int note = scales[scale][currentPosition] * 3;
+      dacOutput(note);
+    }
 
-    int note = scales[scale][currentPosition] * 3;
-    Serial.println(note);
-    dacOutput(note);
+
     
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
