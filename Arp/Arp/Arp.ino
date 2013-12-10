@@ -1,6 +1,8 @@
 #include <math.h>
 //#include "drumPatterns.h";
 
+
+
 //  constants related to the Arduino Nano pin use
 const int clkIn = 2;           // the digital (clock) input
 const int digPin[2] = {3, 4};  // the digital output pins
@@ -22,46 +24,49 @@ int currentDirection = 1;
 int scale;
 
 const int noOfPatterns = 1; 
-const int patternLength = 8;
-int pattern[noOfPatterns][patternLength] = {{0,1,2,3,4,5,6,7}};
+const int patternLength = 9;
+int pattern[noOfPatterns][patternLength] = {{0,1,2,3,4,5,6,7,8}};
 int patternType;
 int patternTypeUtility = 1023 / noOfPatterns;
 int patternPlace = 0;
 
 const int noOfScales = 25;
-const int scaleLength = 8;
+const int scaleLength = 9;
 int scaleUtility = 1023 / noOfScales;
 int scales[noOfScales][scaleLength] = {
+  
+// scales. 99 means "end here"  
+  
 // Major. 12 scales
-{1,3,4,6,8,9,11,0},    // c major
-{6,8,10,11,1,3,5,0},   // d major
-{5,7,9,10,12,2,4,0},   // C#/Db
-{7,9,11,12,2,4,6,0},   // D#/Eb
-{8,10,12,1,3,5,7,0},   // E Major
-{9,11,1,2,4,6,8,0},    // F Major
-{10,12,2,3,5,7,9,0},   // F#/Gb
-{11,1,3,4,6,8,10,0},   // G Major
-{12,2,4,5,7,9,11,0},   // G#/Ab
-{1,3,5,6,8,10,12,0},   // A Major
-{2,4,6,7,9,11,1,0},    // A#/Bb
-{3,5,7,8,10,12,2,0},   // B Major
+{1,3,4,6,8,9,11,13,99},    // c major
+{1,3,5,6,8,10,11,13,99},   // d major
+{2,4,5,7,9,10,12,13,99},   // C#/Db
+{2,4,6,7,9,11,12,13,99},   // D#/Eb
+{1,3,5,7,8,10,12,13,99},   // E Major
+{1,2,4,6,8,9,11,13,99},    // F Major
+{2,3,5,7,9,10,12,13,99},   // F#/Gb
+{1,3,4,6,8,10,11,13,99},   // G Major
+{2,4,5,7,9,11,12,13,99},   // G#/Ab
+{1,3,5,6,8,10,12,13,99},   // A Major
+{1,2,4,6,7,9,11,13,99},    // A#/Bb
+{2,3,5,7,8,10,12,13,99},   // B Major
 
 // Minor. 12 scales. 
-{1,3,4,6,9,11,1,0},    // A Minor
-{2,4,5,7,9,10,12,0},   // A#/Bb
-{3,5,6,8,10,11,1,0},   // B Minor
-{5,6,8,10,12,1,3,0},   // C Minor
-{5,7,8,10,12,1,3,0},   // C#/Db
-{6,8,9,11,1,2,4,0},    // D Minor
-{7,9,10,12,2,3,5,0},   // D#/Eb
-{8,10,11,1,3,4,6,0},   // E Minor
-{9,11,12,2,4,5,7,0},   // F Minor
-{10,12,1,3,5,6,8,0},   // F#/Gb
-{11,1,2,4,6,7,9,0},    // G Minor
-{12,2,3,5,7,8,1,0},     // G#/Ab
+{1,3,4,6,8,9,11,13,99},    // A Minor
+{2,4,5,7,9,10,12,13,99},   // A#/Bb
+{1,3,5,6,8,10,11,13,99},   // B Minor
+{1,3,5,6,8,10,12,13,99},   // C Minor
+{1,3,5,7,8,10,12,13,99},   // C#/Db
+{1,2,4,6,8,9,11,13,99},    // D Minor
+{2,3,5,7,9,10,12,13,99},   // D#/Eb
+{1,3,4,6,8,10,11,13,99},   // E Minor
+{2,4,5,7,9,11,12,13,99},   // F Minor
+{1,3,5,6,8,10,12,13,99},   // F#/Gb
+{1,2,4,6,7,9,11,13,99},    // G Minor
+{1,2,3,5,7,8,12,13,99},     // G#/Ab
 
 // Pentatonic. 12 scales.
-{4,6,8,11,1,4,6}
+{1,4,6,8,11,13,99,99,99}
 };
 
 ////////////////////////////////////////////////////////
@@ -89,13 +94,12 @@ void setup()
 
 
 
-
-
-
 void loop() {
 
   scale = (analogRead(2) / scaleUtility) -1;
   if (scale == -1) {scale = 0;}  
+
+  
   patternType = (analogRead(3) / patternTypeUtility) -1;
   if (patternType == -1) {patternType = 0;}    
  
@@ -106,22 +110,38 @@ void loop() {
     clkState = LOW;
  
     currentPosition = pattern[0][patternPlace];
+                              Serial.print("patternPlace: ");  Serial.println(patternPlace);
     patternPlace++;
-   
-    if (patternPlace >= (patternLength)) {
-      patternPlace = 0; 
-    }    
 
-    previousPosition = currentPosition;
-    if (scales[scale][currentPosition] == 0) { // if we are in the last position
+                              Serial.print("scale: "); Serial.println(scales[scale][currentPosition]);
+    
+    if (scales[scale][currentPosition] == 99) { // if we are in the last position
+      patternPlace = 0;
+      currentPosition = 0;
+                              Serial.print("scale is not 99 but: "); Serial.println(scales[scale][currentPosition]);
+                              Serial.print("currentPosition: "); Serial.println(currentPosition);
+      int note = (((scales[scale][currentPosition]) * 4) + (12 * 4));
+      dacOutput(note);
+      patternPlace++;
       
-      int note = scales[scale][0] * 3 + 3;
-      dacOutput(note);      
+                              
     }
     else {
-      int note = scales[scale][currentPosition] * 3;
+      int note = (((scales[scale][currentPosition]) * 4) + (12 * 4));
       dacOutput(note);
-    }
+    }    
+    
+//    previousPosition = currentPosition;
+   
+//    if (patternPlace >= (patternLength)) {
+//      patternPlace = 0; 
+//    }    
+
+
+//    if (scales[scale][currentPosition] == 0) { // if we are in the last position
+//      
+//    }
+
 
 
     
