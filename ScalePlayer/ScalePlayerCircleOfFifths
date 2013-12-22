@@ -1,0 +1,208 @@
+
+//  constants related to the Arduino Nano pin use
+const int clkIn = 2;           // the digital (clock) input
+const int digPin[2] = {3, 4};  // the digital output pins
+const int pinOffset = 5;       // the first DAC pin (from 5-12)
+const int trigTime = 25;       // 25 ms trigger timing
+
+//  variables for interrupt handling of the clock input
+volatile int clkState = LOW;
+
+//  variables used to control the current DIO output states
+int digState[2] = {LOW, LOW};        // start with both set low
+unsigned long digMilli[2] = {0, 0};  // a place to store millis()
+
+int currentScaleValue = 0;
+int previousNote = 98;
+
+
+const int noOfPatterns = 9; // plus one here if a pattern is added to "pattern"
+
+const int patternLength = 9;
+int patternValue;
+int patternType;
+int patternTypeUtility = 1023 / noOfPatterns;
+int patternPlace = 0;
+int pattern[noOfPatterns][patternLength] = {
+  {0,1,2,3,4,5,6,7,8},
+  {8,7,6,5,4,3,2,1,0},
+
+  
+  {0,1,0,2,0,3,0,4,3},
+  
+  {0,2,3,2,3,5,3,5,2},
+  {0,1,2,3,8,7,6,5,4},
+  {0,8,1,7,2,6,3,5,4},
+  {0,1,8,7,2,3,6,5,4},
+  
+  {0,0,0,1,2,4,3,8,7},  
+  {0,0,0,0,0,1,1,2,2},  
+};
+
+int c     = 1;
+int ciss  = 2;
+int d     = 3;
+int diss  = 4;
+int e     = 5;
+int f     = 6;
+int fiss  = 7;
+int g     = 8;
+int giss  = 9;
+int a     = 10;
+int aiss  = 11;
+int b     = 12;
+
+int c2     = 13;
+int ciss2  = 14;
+int d2     = 15;
+int diss2  = 16;
+int e2     = 17;
+int f2     = 18;
+int fiss2  = 19;
+int g2     = 20;
+int giss2  = 21;
+int a2     = 22;
+int aiss2  = 23;
+int b2     = 24;
+
+int c3     = 25;
+int ciss3  = 26;
+int d3     = 27;
+int diss3  = 28;
+int e3     = 29;
+int f3     = 30;
+int fiss3  = 31;
+int g3     = 32;
+int giss3  = 33;
+int a3     = 34;
+int aiss3  = 35;
+int b3     = 36;
+
+int scale;
+
+const int noOfScales = 7;
+const int scaleLength = 9;
+int scaleUtility = 1023 / noOfScales;
+int scales[noOfScales][scaleLength] = {
+  
+  // scales. 99 means "end here"  
+    
+  {c2,    d2,    diss2,  f2,     g2,    giss2,  aiss2,  c3,    99},     // C  
+  {a,     b,     c2,     d2,     e2,    f2,     g2,     a2,    99},     // Am 
+  {g,     a,     b,      c2,     d2,    e2,     fiss2,  g2,    99},     // G  
+  {e2,    fiss2, g2,     a2,     b2,    c3,     d3,     e3,    99},     // Em 
+  {d2,    e2,    fiss2,  g2,     a2,    b2,     ciss3,  d3,    99},     // D  
+  {b,     ciss2, d2,     e2,     fiss2, g2,     a2,     b2,    99},     // Bm   
+  
+  {f,     g,     a,      aiss,   c2,    d2,     e2,     f2,    99}      // F  
+  
+};
+
+////////////////////////////////////////////////////////
+
+void setup() 
+{
+  Serial.begin(9600);
+
+  pinMode(clkIn, INPUT);
+  
+  for (int i=0; i<2; i++) {
+    pinMode(digPin[i], OUTPUT);
+    digitalWrite(digPin[i], LOW);
+  }
+  
+  for (int i=0; i<8; i++) {
+    pinMode(pinOffset+i, OUTPUT);
+    digitalWrite(pinOffset+i, LOW);
+  }
+  attachInterrupt(0, isr, RISING);
+}
+
+
+
+
+
+
+void loop() {
+
+  scale = (analogRead(2) / scaleUtility) -1; if (scale == -1) {scale = 0;}  
+
+  patternType = (analogRead(3) / patternTypeUtility) -1; if (patternType == -1) {patternType = 0;}   
+
+
+  
+
+  if (clkState == HIGH) {
+    clkState = LOW;
+    
+    digitalWrite(digPin[0], HIGH);
+    digitalWrite(digPin[0], LOW);
+   
+    
+    patternValue = pattern[patternType][patternPlace];    
+    
+     Serial.print("analogRead(2): "); Serial.println(analogRead(2)); 
+//          Serial.print("patternPlace: "); Serial.println(patternPlace); 
+    
+    while (scales[scale][patternValue] == 99) {
+      patternPlace++;
+      
+      if (patternPlace >= patternLength) {
+        patternPlace = 0;
+      }
+      
+      patternValue = pattern[patternType][patternPlace];
+    }
+    
+    int note = (((scales[scale][patternValue]) * 4) + (12 * 4));
+    dacOutput(note);
+    
+    if (previousNote != note) {
+      digitalWrite(digPin[1], HIGH);   
+      digitalWrite(digPin[1], LOW);
+    }
+    
+    previousNote = note;
+
+    patternPlace++;
+    
+    if (patternPlace >= patternLength) {
+      patternPlace = 0;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+void isr()
+{
+  clkState = HIGH;
+}
+
+void writeStep(boolean on){
+    if(on){
+        digitalWrite(digPin[0], HIGH);
+        digitalWrite(digPin[1], LOW);
+    }else{
+        digitalWrite(digPin[0], LOW);
+        digitalWrite(digPin[1], HIGH);
+    }  
+}
+
+//  dacOutput(long) - deal with the DAC output
+//  ------------------------------------------
+void dacOutput(long v)
+{
+  // feed this routine a value between 0 and 255 and teh DAC
+  // output will send it out.
+  int tmpVal = v;
+  for (int i=0; i<8; i++) {
+    digitalWrite(pinOffset + i, tmpVal & 1);
+    tmpVal = tmpVal >> 1;
+  }
+}
