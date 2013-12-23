@@ -80,7 +80,7 @@ int b3     = 36;
 
 int scale;
 
-const int noOfScales = 7;
+const int noOfScales = 9;
 const int scaleLength = 9;
 int scaleUtility = 1023 / noOfScales;
 int scales[noOfScales][scaleLength] = {
@@ -93,6 +93,9 @@ int scales[noOfScales][scaleLength] = {
   {e2,    fiss2, g2,     a2,     b2,    c3,     d3,     e3,    99},     // Em 
   {d2,    e2,    fiss2,  g2,     a2,    b2,     ciss3,  d3,    99},     // D  
   {b,     ciss2, d2,     e2,     fiss2, g2,     a2,     b2,    99},     // Bm   
+  {a,     b,     ciss2,  d2,     e2,    fiss2,  giss2,  a2,    99},     // A 
+  {fiss,  giss,  a,      b,      ciss2, d2,     e2,     fiss2, 99},     // Fiss moll   
+  
   
   {f,     g,     a,      aiss,   c2,    d2,     e2,     f2,    99}      // F  
   
