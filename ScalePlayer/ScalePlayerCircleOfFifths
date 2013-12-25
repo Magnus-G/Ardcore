@@ -18,26 +18,52 @@ int previousNote = 98;
 
 const int noOfPatterns = 9; // plus one here if a pattern is added to "pattern"
 
-const int patternLength = 9;
+const int patternLength = 16;
 int patternValue;
 int patternType;
 int patternTypeUtility = 1023 / noOfPatterns;
 int patternPlace = 0;
 int pattern[noOfPatterns][patternLength] = {
-  {0,1,2,3,4,5,6,7,8},
-  {8,7,6,5,4,3,2,1,0},
+  
+  // 0-7 are places in the chord arrays.
+  // 8 means skip (nothing). 
+  
+  // 1, 2, 3, 4, 5, 6, 7, 8,   1, 2, 3, 4, 5, 6, 7, 8
+    {0, 1, 2, 3, 4, 5, 6, 7,   7, 6, 5, 4, 3, 2, 1, 0},
+    {7, 6, 5, 4, 3, 2, 1, 0,   7, 6, 5, 4, 3, 2, 1, 0},
 
   
-  {0,1,0,2,0,3,0,4,3},
+    {0, 1, 0, 2, 0, 3, 0, 4,   0, 1, 0, 2, 0, 3, 0, 4},
   
-  {0,2,3,2,3,5,3,5,2},
-  {0,1,2,3,8,7,6,5,4},
-  {0,8,1,7,2,6,3,5,4},
-  {0,1,8,7,2,3,6,5,4},
+    {0, 2, 3, 2, 3, 5, 3, 5,   0, 2, 3, 2, 3, 5, 3, 5},
+    {0, 1, 2, 3, 7, 6, 5, 4,   0, 1, 2, 3, 7, 6, 5, 4},
+    {0, 7, 1, 6, 2, 5, 3, 4,   0, 7, 1, 6, 2, 5, 3, 4},
+    {0, 1, 7, 6, 2, 3, 5, 4,   0, 1, 7, 6, 2, 3, 5, 4},
   
-  {0,0,0,1,2,4,3,8,7},  
-  {0,0,0,0,0,1,1,2,2},  
+    {0, 0, 0, 1, 2, 4, 3, 7,   0, 0, 0, 1, 2, 4, 3, 7},  
+    {0, 0, 0, 0, 1, 1, 2, 2,   0, 0, 0, 0, 1, 1, 2, 2},  
 };
+
+//const int patternLength = 9;
+//int patternValue;
+//int patternType;
+//int patternTypeUtility = 1023 / noOfPatterns;
+//int patternPlace = 0;
+//int pattern[noOfPatterns][patternLength] = {
+//  {0,1,2,3,4,5,6,7,8},
+//  {8,7,6,5,4,3,2,1,0},
+//
+//  
+//  {0,1,0,2,0,3,0,4,3},
+//  
+//  {0,2,3,2,3,5,3,5,2},
+//  {0,1,2,3,8,7,6,5,4},
+//  {0,8,1,7,2,6,3,5,4},
+//  {0,1,8,7,2,3,6,5,4},
+//  
+//  {0,0,0,1,2,4,3,8,7},  
+//  {0,0,0,0,0,1,1,2,2},  
+//};
 
 int c     = 1;
 int ciss  = 2;
