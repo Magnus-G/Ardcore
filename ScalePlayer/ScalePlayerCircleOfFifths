@@ -80,14 +80,14 @@ int b3     = 36;
 
 int scale;
 
-const int noOfScales = 9;
+const int noOfScales = 11;
 const int scaleLength = 9;
 int scaleUtility = 1023 / noOfScales;
 int scales[noOfScales][scaleLength] = {
   
   // scales. 99 means "end here"  
     
-  {c2,    d2,    diss2,  f2,     g2,    giss2,  aiss2,  c3,    99},     // C  
+  {c2,    d2,    e2,  f2,     g2,    a2,  b2,  c3,    99},     // C  
   {a,     b,     c2,     d2,     e2,    f2,     g2,     a2,    99},     // Am 
   {g,     a,     b,      c2,     d2,    e2,     fiss2,  g2,    99},     // G  
   {e2,    fiss2, g2,     a2,     b2,    c3,     d3,     e3,    99},     // Em 
@@ -95,7 +95,8 @@ int scales[noOfScales][scaleLength] = {
   {b,     ciss2, d2,     e2,     fiss2, g2,     a2,     b2,    99},     // Bm   
   {a,     b,     ciss2,  d2,     e2,    fiss2,  giss2,  a2,    99},     // A 
   {fiss,  giss,  a,      b,      ciss2, d2,     e2,     fiss2, 99},     // Fiss moll   
-  
+  {e,  fiss,  giss,      a,      b, ciss2,     diss2,     e2, 99},     // E     
+  {c2,  d2,  diss2,      f2,      g2, giss2,     aiss2,     c3, 99},     // Ciss moll     
   
   {f,     g,     a,      aiss,   c2,    d2,     e2,     f2,    99}      // F  
   
