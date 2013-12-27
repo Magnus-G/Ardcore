@@ -1,7 +1,10 @@
-int const noOfMelodyPatterns = 1;
+int const noOfMelodyPatterns = 3;
+int melodyPatternType;
 int melodyPattern[noOfMelodyPatterns][16] = {
  // 1, 2, 3, 4, 5, 6, 7, 8,  1, 2, 3, 4, 5, 6, 7, 8
-   {1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1},
+   {1, 1, 0, 0, 0, 0, 0, 0,  1, 1, 0, 0, 0, 0, 1, 0},
+   {0, 0, 0, 0, 0, 0, 0, 0,  1, 1, 0, 0, 0, 0, 1, 0},   
+   {1, 1, 1, 1, 0, 0, 0, 0,  1, 1, 1, 1, 0, 0, 1, 0},      
 };
 
 // drums [z][y][x]
@@ -81,4 +84,3 @@ int drums[noOfDrumPrograms][noOfDrumOutputs][16] = {
     {1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1},
   }  
 };
-

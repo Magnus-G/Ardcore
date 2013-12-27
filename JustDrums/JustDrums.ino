@@ -62,6 +62,15 @@ void loop() {
             
       // go through drum matrix
       for (int x=1; x<17; x++) { // temporal. start with first beat point...
+        
+        // set melodyPatternType
+        int melodyPatternType = (analogRead(0) / (1023/noOfMelodyPatterns)); if (melodyPatternType > 0) {  melodyPatternType--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
+        
+        // write 0 or 1 on output to trigger melody pattern, set independently of the current drumpattern.
+        digitalWrite(pinOffset+(5), melodyPattern[melodyPatternType][x-1]);
+        delay(1);
+        digitalWrite(pinOffset+(5), LOW);  
+      
         for (int y=1; y<noOfDrumSteps; y++) { // vertical, outputs. start with output 0...
           randValue = random(0, 1023);
           if (randValue > analogRead(2)) {     
@@ -69,39 +78,33 @@ void loop() {
             // set drumProgram
             int drumProgram = (analogRead(3) / (1023/noOfDrumPrograms)); if (drumProgram > 0) {  drumProgram--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
             
+            // the hits
             digitalWrite(pinOffset+(y-1), drums[drumProgram][y-1][x-1]);
             delay(1);
             digitalWrite(pinOffset+(y-1), LOW);  
-           
           }          
         }
-  
         delay(1023 - analogRead(1)); // delay after each beat == bpm
+      }
+      
+  // extra hits, outside of the drum program
+  drumLoops++;
+  
+  if (drumLoops % 2 == 0) {
+    digitalWrite(3, HIGH);
+    digitalWrite(4, LOW);
+  }
+  
+  if (drumLoops % 3 == 0) {
+    digitalWrite(4, HIGH);
+    digitalWrite(3, LOW);
+  }
 
-      }
-      
-      
-      
-      // every nth time the drumLoop loops, send out a trigger on no 7.
-      drumLoops++;
-      
-      if (drumLoops % 2 == 0) {
-        digitalWrite(3, HIGH);
-        digitalWrite(4, LOW);
-      }
-      
-      if (drumLoops % 3 == 0) {
-        digitalWrite(4, HIGH);
-        digitalWrite(3, LOW);
-      }
-
-      if (drumLoops % 6 == 0) {
-        digitalWrite(pinOffset+(7), HIGH);
-        delay(1);
-        digitalWrite(pinOffset+(7), LOW);
-      }      
-      
-//  } // end if clock state high
+  if (drumLoops % 6 == 0) {
+    digitalWrite(pinOffset+(7), HIGH);
+    delay(1);
+    digitalWrite(pinOffset+(7), LOW);
+  }      
 } // end loop
 
 //  =================== convenience routines ===================
