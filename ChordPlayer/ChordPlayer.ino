@@ -86,7 +86,7 @@ int b4     = 48;
 
 int chord;
 
-const int noOfchords = 8;
+const int noOfchords = 16;
 const int chordLength = 15;
 int chordUtility = 1023 / noOfchords;
 int chords[noOfchords][chordLength] = {
@@ -94,15 +94,24 @@ int chords[noOfchords][chordLength] = {
   // chords. 99 means "skip this"  
 
   
-  // 0,    1,    2,    3,     4,     5,     6,     7,     8,     9,     10,    11,    12,    13,     14    
-    {c,    e,    g,    99,    99,    c2,    e2,    g2,    99,    99,    c3,    e3,    g3,    99,     99},     // C  
-    {a,    c2,   e2,   99,    99,    a2,    c3,    e3,    99,    99,    a3,    c4,    e4,    99,     99},      // Am
-    {g,    b,    d2,   99,    99,    g2,    b2,    d3,    99,    99,    g3,    b3,    d4,    99,     99},      // Am
-    {e,    g,    b,    99,    99,    e2,    g2,    b2,    99,    99,    e3,    g3,    b3,    99,     99},      // Am
-    {d,    fiss, a,    99,    99,    d2,    fiss2, a2,    99,    99,    d3,    fiss3, a3,    99,     99},      // Am
-    {b,    d2,   fiss2,99,    99,    b2,    d3,    fiss3, 99,    99,    b3,    d4,    fiss4, 99,     99},      // Am
-    {a,    ciss2,e2,   99,    99,    a2,    ciss3, e3,    99,    99,    a3,    ciss4, e4,    99,     99},      // Am
-    {fiss, a,    ciss2,99,    99,    fiss2, a2,    ciss3, 99,    99,    fiss3,    a3,    ciss4,    99,     99}      // Am    
+  // 0,    1,     2,     3,     4,     5,     6,     7,     8,     9,     10,    11,    12,    13,     14    
+  
+    {c,    e,     g,     99,    99,    c2,    e2,    g2,    99,    99,    c3,    e3,    g3,    99,     99},      // C  
+    {a,    c2,    e2,    99,    99,    a2,    c3,    e3,    99,    99,    a3,    c4,    e4,    99,     99},      // Am
+    {g,    b,     d2,    99,    99,    g2,    b2,    d3,    99,    99,    g3,    b3,    d4,    99,     99},      // G
+    {e,    g,     b,     99,    99,    e2,    g2,    b2,    99,    99,    e3,    g3,    b3,    99,     99},      // Em
+    {d,    fiss,  a,     99,    99,    d2,    fiss2, a2,    99,    99,    d3,    fiss3, a3,    99,     99},      // D
+    {b,    d2,    fiss2, 99,    99,    b2,    d3,    fiss3, 99,    99,    b3,    d4,    fiss4, 99,     99},      // Bm
+    {a,    ciss2, e2,    99,    99,    a2,    ciss3, e3,    99,    99,    a3,    ciss4, e4,    99,     99},      // A
+    {fiss, a,     ciss2, 99,    99,    fiss2, a2,    ciss3, 99,    99,    fiss3, a3,    ciss4, 99,     99}       // Fissm  
+    {e,    giss,  b,     99,    99,    e2,    giss2, b2,    99,    99,    e3,    giss3, b3,    99,     99}       // E 
+    {ciss, e,     giss,  99,    99,    ciss2, e2,    giss2, 99,    99,    ciss3, e3,    giss3, 99,     99}       // Cissm 
+    {b,    diss2, fiss2, 99,    99,    b2,    diss3, fiss3, 99,    99,    b3,    diss4, fiss4, 99,     99}       // B
+    {giss, b,     diss2, 99,    99,    giss2, b2,    diss3, 99,    99,    giss3, b3,    diss4, 99,     99}       // Giss 
+    {fiss, aiss,  ciss2, 99,    99,    fiss2, aiss2, ciss3, 99,    99,    fiss3, aiss3, ciss4, 99,     99}       // Fiss 
+    {diss, fiss,  aiss,  99,    99,    diss2, fiss2, aiss2, 99,    99,    diss3, fiss3, aiss3, 99,     99}       // Dissm
+    {ciss, f,     giss,  99,    99,    ciss2, f2,    giss2, 99,    99,    ciss3, f3,    giss3, 99,     99}       // Ciss
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99}       // Aissm
 };
 
 ////////////////////////////////////////////////////////
@@ -133,7 +142,7 @@ void setup()
 void loop() {
 
 //  chord = (analogRead(2) / chordUtility) -1; if (chord == -1) {chord = 0;}  
-  chord = (analogRead(2) >> 7); // Divide 1023 by 2. then the result by 2... iterate seven times. Chord is between 0 and 7
+  chord = (analogRead(2) >> 6); // Divide 1023 by 2. then the result by 2... iterate six times. Chord is between 0 and 15
   
        Serial.print("chord: "); Serial.println(chord); 
 
@@ -213,4 +222,3 @@ void dacOutput(long v)
     tmpVal = tmpVal >> 1;
   }
 }
-
