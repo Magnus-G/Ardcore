@@ -1,0 +1,298 @@
+
+//  constants related to the Arduino Nano pin use
+const int clkIn = 2;           // the digital (clock) input
+const int digPin[2] = {3, 4};  // the digital output pins
+const int pinOffset = 5;       // the first DAC pin (from 5-12)
+const int trigTime = 25;       // 25 ms trigger timing
+
+//  variables for interrupt handling of the clock input
+volatile int clkState = LOW;
+
+//  variables used to control the current DIO output states
+int digState[2] = {LOW, LOW};        // start with both set low
+unsigned long digMilli[2] = {0, 0};  // a place to store millis()
+
+int probabilitySwitch = 0;
+
+// for the calculation of distances between "clock highs"
+long time;
+long halfTime;
+long oldTime = 0;
+
+int currentchordValue = 0;
+int previousNote = 98;
+
+
+const int noOfPatterns = 16; // plus one here if a pattern is added to "pattern"
+
+const int patternLength = 16;
+int patternValue;
+int patternType;
+int patternTypeUtility = 1023 / noOfPatterns;
+int patternPlace = 0;
+int pattern[noOfPatterns][patternLength] = {
+  
+  // | 5 || 6 | 7 | 8 | 9 |10 |11 |12 |
+  // | 0 || 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+  
+  // 1,  2,  3,  4,  5,  6,  7,  8,   1,  2,  3,  4,  5,  6,  7,  8
+    {0,  1,  2,  3,  4,  5,  6,  7,   8,  9,  10, 11, 12, 13, 14, 14},
+    {0,  5,  0,  1,  3,  5,  0,  5,   10, 9,  5,  0,  1,  3,  10, 9},    
+    {0,  1,  0,  2,  0,  3,  0,  4,   0,  5,  0,  6,  0,  7,  0,  8},      
+    {0,  2,  3,  3,  7,  3,  5,  5,   8,  10, 3,  3,  7,  3,  2,  2},  
+    {0,  0,  0,  0,  0,  12, 10, 9,   5,  0,  0,  0,  0,  0,  3,  2},  
+    {12, 0,  12, 0,  12, 0,  12, 0,   5,  9,  10, 0,  10, 0,  10, 0},  
+    {5,  5,  5,  8,  3,  10, 2,  3,   5,  7,  8,  10, 12, 0,  2,  3},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0}, 
+    
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},  
+    {0,  0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,  0,  0},      
+};
+
+int c     = 1;      int c2     = 13;     int c3     = 25;     int c4     = 37;
+int ciss  = 2;      int ciss2  = 14;     int ciss3  = 26;     int ciss4  = 38;
+int d     = 3;      int d2     = 15;     int d3     = 27;     int d4     = 39;
+int diss  = 4;      int diss2  = 16;     int diss3  = 28;     int diss4  = 40;
+int e     = 5;      int e2     = 17;     int e3     = 29;     int e4     = 41;
+int f     = 6;      int f2     = 18;     int f3     = 30;     int f4     = 42;
+int fiss  = 7;      int fiss2  = 19;     int fiss3  = 31;     int fiss4  = 43;
+int g     = 8;      int g2     = 20;     int g3     = 32;     int g4     = 44;
+int giss  = 9;      int giss2  = 21;     int giss3  = 33;     int giss4  = 45;
+int a     = 10;     int a2     = 22;     int a3     = 34;     int a4     = 46;
+int aiss  = 11;     int aiss2  = 23;     int aiss3  = 35;     int aiss4  = 47;
+int b     = 12;     int b2     = 24;     int b3     = 36;     int b4     = 48;
+
+int chord;
+int oldChord;
+const int noOfchords = 32;
+const int chordLength = 15;
+int chordUtility = 1023 / noOfchords;
+int chords[noOfchords][chordLength] = {
+  
+  // 0,    1,     2,     3,     4,     5,     6,     7,     8,     9,     10,    11,    12,    13,     14        // chords. 99 means "skip this"  
+  
+    {c,    e,     g,     99,    99,    c2,    e2,    g2,    99,    99,    c3,    e3,    g3,    99,     99},      // C  
+    {a,    c2,    e2,    99,    99,    a2,    c3,    e3,    99,    99,    a3,    c4,    e4,    99,     99},      // Am
+    {g,    b,     d2,    99,    99,    g2,    b2,    d3,    99,    99,    g3,    b3,    d4,    99,     99},      // G
+    {e,    g,     b,     99,    99,    e2,    g2,    b2,    99,    99,    e3,    g3,    b3,    99,     99},      // Em
+    {d,    fiss,  a,     99,    99,    d2,    fiss2, a2,    99,    99,    d3,    fiss3, a3,    99,     99},      // D
+    {b,    d2,    fiss2, 99,    99,    b2,    d3,    fiss3, 99,    99,    b3,    d4,    fiss4, 99,     99},      // Bm
+    {a,    ciss2, e2,    99,    99,    a2,    ciss3, e3,    99,    99,    a3,    ciss4, e4,    99,     99},      // A
+    {fiss, a,     ciss2, 99,    99,    fiss2, a2,    ciss3, 99,    99,    fiss3, a3,    ciss4, 99,     99},      // Fissm  
+    {e,    giss,  b,     99,    99,    e2,    giss2, b2,    99,    99,    e3,    giss3, b3,    99,     99},      // E 
+    {ciss, e,     giss,  99,    99,    ciss2, e2,    giss2, 99,    99,    ciss3, e3,    giss3, 99,     99},      // Cissm 
+    {b,    diss2, fiss2, 99,    99,    b2,    diss3, fiss3, 99,    99,    b3,    diss4, fiss4, 99,     99},      // B
+    {giss, b,     diss2, 99,    99,    giss2, b2,    diss3, 99,    99,    giss3, b3,    diss4, 99,     99},      // Giss 
+    {fiss, aiss,  ciss2, 99,    99,    fiss2, aiss2, ciss3, 99,    99,    fiss3, aiss3, ciss4, 99,     99},      // Fiss 
+    {diss, fiss,  aiss,  99,    99,    diss2, fiss2, aiss2, 99,    99,    diss3, fiss3, aiss3, 99,     99},      // Dissm
+    {ciss, f,     giss,  99,    99,    ciss2, f2,    giss2, 99,    99,    ciss3, f3,    giss3, 99,     99},      // Ciss
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    
+    {giss, c2,    d2,    99,    99,    giss2, c3,    d3,    99,    99,    giss3, c4,    d4,    99,     99},      // Giss
+    {f,    giss,  c2,    99,    99,    f2,    giss2, c3,    99,    99,    f3,    giss3, c4,    99,     99},      // Fm
+    {diss, g,     aiss,  99,    99,    diss2, g2,    aiss2, 99,    99,    diss3, g3,    aiss3, 99,     99},      // Diss
+    {c,    diss,  g,     99,    99,    c2,    diss2, g2,    99,    99,    c3,    diss3, g3,    99,     99},      // Cm
+    {aiss, d2,    f2,    99,    99,    aiss2, d3,    f3,    99,    99,    aiss3, d4,    f4,    99,     99},      // Aiss
+    {g,    aiss,  d2,    99,    99,    g2,    aiss2, d3,    99,    99,    g3,    aiss3, d4,    99,     99},      // Gm
+    {f,    a,     c2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // F
+    {d,    f,     a,     99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Dm
+    
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    {aiss, ciss2, f2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // Aissm
+    
+    {c,    ciss,  d,     diss,  e,     f,     fiss,  g,     giss,  a,     aiss,  b,     99,    99,     99}       // 12 note    
+};
+
+////////////////////////////////////////////////////////
+
+void setup() 
+{
+  Serial.begin(9600);
+
+  pinMode(clkIn, INPUT);
+  
+  for (int i=0; i<2; i++) {
+    pinMode(digPin[i], OUTPUT);
+    digitalWrite(digPin[i], LOW);
+  }
+  
+  for (int i=0; i<8; i++) {
+    pinMode(pinOffset+i, OUTPUT);
+    digitalWrite(pinOffset+i, LOW);
+  }
+  attachInterrupt(0, isr, RISING);
+}
+
+
+void setProbabilitySwitch() {   
+      
+}
+
+////////////////////////////////////////////////////////
+
+void loop() {
+  
+  // Divide 1023 by 2. then the result by 2... iterate five times. Chord is between 0 and 31
+  chord = (analogRead(2) >> 5); 
+
+  // protect from less than zero for the chords.
+  if ((chord == 0) && probabilitySwitch < 0) {
+   probabilitySwitch = 0;
+  }
+  
+  // protect from being more than max for the chords.
+  if ((chord == 31) && probabilitySwitch > 0) {
+   probabilitySwitch = 0;
+  }
+  if ((chord == 30) && probabilitySwitch > 1) {
+   probabilitySwitch = 0;
+  }
+
+
+  // make it possible to set a new chord by resetting a potential probabilitySwitch
+  oldChord = chord;
+  if (oldChord != chord) {
+    probabilitySwitch = 0;
+  }
+ 
+  patternType = (analogRead(3) >> 6);   
+
+  
+
+  if (clkState == HIGH) {
+    clkState = LOW;
+    
+                        // DOUBLE HIT FOR HIGH OCTAVE SETTING
+                        // get time for each clock high to find time between "clock highs" IS LONG CORRECT?
+                        long time = millis() - oldTime; // milliseconds between current time and last high.
+                        long halfTime = time / 2;
+                        oldTime = time;
+                        // H - - - - - - H + + + + + - - - - - H - - - - - - H
+                        //               oldTime    halfTime   millis
+    
+    // Gate high for D0 on each output signal
+    digitalWrite(digPin[0], HIGH); digitalWrite(digPin[0], LOW);
+    
+    // set pattern
+    patternValue = pattern[patternType][patternPlace];    
+    
+    // skip a step if 99 is found
+    while (chords[chord][patternValue] == 99) {
+      patternPlace++;      
+      if (patternPlace >= patternLength) {
+        patternPlace = 0;
+      }
+      patternValue = pattern[patternType][patternPlace];
+    }
+    
+    
+    // play
+    int note = (((chords[chord + probabilitySwitch][patternValue]) * 4) + (12 * 4));
+    dacOutput(note);
+
+    
+    // gate high for D1 only if the note changes from last time
+    if (previousNote != note) {
+      digitalWrite(digPin[1], HIGH);   
+      digitalWrite(digPin[1], LOW);
+    }
+    previousNote = note;
+
+
+    // advance one step in pattern
+    patternPlace++;
+                        
+                        // IN-PATTERN SWITCHING                   
+                        // --------------------
+                        // set place in pattern where a chord switch might occur. use A1 for this OR for the double octave below.
+                        if (patternPlace > (analogRead(1) >> 6)) {
+                                       // depending on A0's value, and chance, a parallel chord in the circle of fifths might be used instead of "chord".   
+                  int randValueForA0 = random(0, 1023);
+                  if (analogRead(0) > randValueForA0) {
+                    // random value to determine whether a chord should be pushed upwards or downwards.
+                    int randValueUpOrDown = random(0, 2);
+                      if (randValueUpOrDown == 0) {
+                        probabilitySwitch = -1; // jump down one chord
+                      }
+                      else 
+                      if (randValueUpOrDown == 1) {  
+                        probabilitySwitch = 1; // jump up one chord
+                      }
+                      else 
+                      if (randValueUpOrDown == 2) {  
+                        probabilitySwitch = 2; // jump up two chords
+                      }
+                    }
+                        }
+    
+    // when the pattern has reached its final note in the pattern series
+    if (patternPlace >= patternLength) {
+      patternPlace = 0;
+      
+                        // END OF PATTERN SWITCHING
+                        // ------------------------
+                        // call function for setting probability switch. 
+                        // use this OR the "in-pattern" version above.
+//                        setProbabilitySwitch;
+
+      } // pattern has reached its final note
+    
+    
+  } // clock high ends
+  
+                        // DOUBLE HIT FOR HIGH OCTAVE. use this OR the 
+//                        int note2 = (((chords[chord + probabilitySwitch][patternValue]) * 4) + (12 * 4)) -12;
+//                        // play note2 (one octave up) if A1 is within reach of a randomized value
+//                        int randValueForA1 = random(0, 1023);
+//                        if ((analogRead(1) > randValueForA1) && (millis() - time == halfTime)) {
+//                          dacOutput(note2);
+//                        }
+  
+  
+} // loop
+
+
+
+
+
+
+
+
+void isr()
+{
+  clkState = HIGH;
+}
+
+void writeStep(boolean on){
+    if(on){
+        digitalWrite(digPin[0], HIGH);
+        digitalWrite(digPin[1], LOW);
+    }else{
+        digitalWrite(digPin[0], LOW);
+        digitalWrite(digPin[1], HIGH);
+    }  
+}
+
+//  dacOutput(long) - deal with the DAC output
+//  ------------------------------------------
+void dacOutput(long v)
+{
+  // feed this routine a value between 0 and 255 and teh DAC
+  // output will send it out.
+  int tmpVal = v;
+  for (int i=0; i<8; i++) {
+    digitalWrite(pinOffset + i, tmpVal & 1);
+    tmpVal = tmpVal >> 1;
+  }
+}
