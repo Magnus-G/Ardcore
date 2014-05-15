@@ -28,12 +28,29 @@ int previousNote = 98;
 int place;
 const int noOfplaces = 9;
 
+
+//////////////////////////////
+
+const int noOfTranspositions = 3;
+int transpositions[noOfTranspositions] = {0, 2, 3};
+int transposeValue;
+int transpose = 0;
+
+//////////////////////////////
+
+int pauseCounterNoOfSteps = 16;
+int pauseCounterEndValue = 0; // the value user sets for when pause is over.
+int pauseCounter = 0;
+
+//////////////////////////////
+
 int patternPlayLength = 16;
+
+//////////////////////////////
 
 int previousPatternPlace;
 
-const int noOfPatterns = 8; // plus one here if a pattern is added to "pattern"
-
+const int noOfPatterns = 9; // plus one here if a pattern is added to "pattern"
 const int patternLength = 16;
 int patternValue;
 int patternType;
@@ -41,37 +58,38 @@ int patternTypeUtility = 1023 / noOfPatterns;
 int patternPlace = 0;
 int pattern[noOfPatterns][patternLength] = {
   
-  // | 5 A    || 6 A# | 7 B  | 8 C | 9 C# |10 D |11 D# | 12 |
-  // | 0 E    || 1 F  | 2 F# | 3 G | 4 G# | 5 A | 6 A# | 7  |
+  // | 5 A     || 6 A#     | 7 B      | 8 C     | 9 C#    |10 D    |11 D#    | 12    |
+  // | 0(13) E || 1(14) F  | 2(15) F# | 3 G     | 4 G#    | 5 A    | 6 A#    | 7     |
   
   // 1,  2,  3,  4,  5,  6,  7,  8,    1,  2,  3,  4,  5,  6,  7,  8
-    {0,  1,  2,  3,  4,  5,  6,  7,    0,  1,  2,  3,  4,  5,  6,  7},  
-    {0,  7,  10, 7,  9,  5,  7,  3,    0,  7,  10, 7,  9,  5,  7,  3},  
-    {0,  1,  0,  2,  0,  3,  0,  4,    0,  1,  0,  2,  0,  3,  0,  4},  
-    {0,  2,  3,  3,  7,  3,  5,  5,    0,  2,  3,  3,  7,  3,  5,  5},  
-    {0,  8,  7,  5,  3,  5,  7, 10,    0,  8,  7,  5,  3,  5,  7, 10}, // 12 o clock  
-    {0,  10, 0,  8,  0,  7,  3,  5,    0,  10, 0,  8,  0,  7,  3,  5},    
-    {0,  7,  3,  0,  9,  5,  9,  10,   0,  7,  3,  0,  9,  5,  9, 10},
+    {0,  1,  2,  3,  4,  5,  6,  7,    8,  9,  10, 11, 12, 13, 14, 15},  // 0
+    {0,  7,  10, 7,  9,  5,  7,  3,    2,  9,  12, 9,  11,  7,  9,  5},  // 1
+    {0,  1,  0,  2,  0,  3,  0,  4,    0,  1,  0,  2,  0,  3,  0,  4},   // 2
+    {0,  2,  3,  3,  7,  3,  5,  5,    2,  4,  5,  5,  9,  5,  7,  7},   // 3
+    {0,  8,  7,  5,  3,  5,  7, 10,    0,  8,  7,  5,  3,  5,  7, 10},   // 4
+    {0,  10, 0,  8,  0,  7,  3,  5,    2,  12, 2,  10,  2,  9,  5,  7},   // 5
+    {0,  7,  3,  0,  9,  5,  9,  10,   0,  7,  3,  0,  9,  5,  9, 10},   // 6
     
-    {0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0},     
+    {0,  0,  1,  0,  0,  2,  0,  3,    0,  0,  3,  0,  0,  2,  0,  1},   // 7 
+    {0,  0,  1,  0,  0,  6,  0,  3,    0,  0,  6,  0,  0,  3,  0,  1},   // 8 
 };
 
-int c     = 1;      int c2     = 13;     int c3     = 25;     int c4     = 37;
-int ciss  = 2;      int ciss2  = 14;     int ciss3  = 26;     int ciss4  = 38;
-int d     = 3;      int d2     = 15;     int d3     = 27;     int d4     = 39;
-int diss  = 4;      int diss2  = 16;     int diss3  = 28;     int diss4  = 40;
-int e     = 5;      int e2     = 17;     int e3     = 29;     int e4     = 41;
-int f     = 6;      int f2     = 18;     int f3     = 30;     int f4     = 42;
-int fiss  = 7;      int fiss2  = 19;     int fiss3  = 31;     int fiss4  = 43;
-int g     = 8;      int g2     = 20;     int g3     = 32;     int g4     = 44;
-int giss  = 9;      int giss2  = 21;     int giss3  = 33;     int giss4  = 45;
-int a     = 10;     int a2     = 22;     int a3     = 34;     int a4     = 46;
-int aiss  = 11;     int aiss2  = 23;     int aiss3  = 35;     int aiss4  = 47;
-int b     = 12;     int b2     = 24;     int b3     = 36;     int b4     = 48;
+int c     = 1;      int c2     = 13;     int c3     = 25;     int c4     = 37;    int c5     = 49;
+int ciss  = 2;      int ciss2  = 14;     int ciss3  = 26;     int ciss4  = 38;    int ciss5  = 50;
+int d     = 3;      int d2     = 15;     int d3     = 27;     int d4     = 39;    int d5     = 51;
+int diss  = 4;      int diss2  = 16;     int diss3  = 28;     int diss4  = 40;    int diss5  = 52;
+int e     = 5;      int e2     = 17;     int e3     = 29;     int e4     = 41;    int e5     = 53;
+int f     = 6;      int f2     = 18;     int f3     = 30;     int f4     = 42;    int f5     = 54;
+int fiss  = 7;      int fiss2  = 19;     int fiss3  = 31;     int fiss4  = 43;    int fiss5  = 55;
+int g     = 8;      int g2     = 20;     int g3     = 32;     int g4     = 44;    int g5     = 56;
+int giss  = 9;      int giss2  = 21;     int giss3  = 33;     int giss4  = 45;    int giss5  = 57;
+int a     = 10;     int a2     = 22;     int a3     = 34;     int a4     = 46;    int a5     = 58;
+int aiss  = 11;     int aiss2  = 23;     int aiss3  = 35;     int aiss4  = 47;    int aiss5  = 59;
+int b     = 12;     int b2     = 24;     int b3     = 36;     int b4     = 48;    int b5     = 60;
 
 int chord;
 int oldChord;
-const int noOfchords = 12;
+const int noOfchords = 16;
 const int chordLength = 15;
 int chordUtility = 1023 / noOfchords;
 int chords[noOfchords][noOfplaces] = {
@@ -88,13 +106,15 @@ int chords[noOfchords][noOfplaces] = {
     {a,    ciss2, e2,     a2,    ciss3, e3,     a3,    ciss4, e4    },      // A
     {aiss, d2,    f2,     aiss2, d3,    f3,     aiss3, d4,    f4    },      // Aiss
     {b,    diss2, fiss2,  b2,    diss3, fiss3,  b3,    diss4, fiss4 },      // B
-    {c2,    e,     g,      c2,    e2,    g2,     c3,    e3,    g3    },      // C
-    {ciss2, f,     giss,   ciss2, f2,    giss2,  ciss3, f3,    giss3 },      // Ciss
-    {d2,    fiss,  a,      d2,    fiss2, a2,     d3,    fiss3, a3    },      // D
-    {diss2, g,     aiss,   diss2, g2,    aiss2,  diss3, g3,    aiss3 },      // Diss
-
-
-
+    {c2,    e,     g,      c2,    e2,    g2,     c3,    e3,    g3    },     // C
+    {ciss2, f,     giss,   ciss2, f2,    giss2,  ciss3, f3,    giss3 },     // Ciss
+    {d2,    fiss,  a,      d2,    fiss2, a2,     d3,    fiss3, a3    },     // D
+    {diss2, g,     aiss,   diss2, g2,    aiss2,  diss3, g3,    aiss3 },     // Diss
+    
+    {e2,    giss2, b2,     e3,    giss3, b3,     e4,    giss4, b4    },     // E 
+    {f2,    a2,     c3,     aiss3, ciss4, f4,     aiss4, ciss4, f5    },    // F    
+    {fiss2, aiss2,  ciss3,  fiss3, aiss3, ciss4,  fiss4, aiss4, ciss5 },    // Fiss 
+    {g2,    b2,     d3,     g3,    b3,    d4,     g4,    b4,    d5    },      // G
 
 //    {e,    giss,  b,     99,    99,    e2,    giss2, b2,    99,    99,    e3,    giss3, b3,    99,     99},      // E 
 //    {f,    a,     c2,    99,    99,    aiss2, ciss3, f3,    99,    99,    aiss3, ciss3, f4,    99,     99},      // F    
@@ -153,94 +173,73 @@ void setProbabilitySwitch() {
 
 void loop() {
 
+if (clkState == HIGH) {
+  clkState = LOW;
   
-  
-  
-  
-  
-  
-  
-  if (analogRead(2) > 1) { // unlock patternPlace with A2 at 0. More than 0 and the A2 input will set the place in the scale list, instead of clock. A new note will set off a trigger.
-    patternPlace = (analogRead(2) / (1023/patternLength)); if (patternLength > 0) {  patternPlace--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
-    
-    
-    patternValue = pattern[patternType][patternPlace];    
-    
-    Serial.print("patternPlace "); Serial.println(patternPlace);
-        Serial.print("previousPatternPlace "); Serial.println(previousPatternPlace);
-//    Serial.print("chord"); Serial.println(chord);
-//    Serial.print("place"); Serial.println(place);  
-    
-    // play
-    int note = (((chords[patternValue][place]) * 4) + (12)); //    int note = (((chords[patternValue][place]) * 4) + (12 * 4));
-    dacOutput(note);
-    
-    if (previousPatternPlace != patternPlace) {
-      digitalWrite(digPin[0], HIGH);   
-      digitalWrite(digPin[0], LOW);
+        Serial.print("pauseCounter"); Serial.println(pauseCounter);
+        Serial.print("pauseCounterEndValue"); Serial.println(pauseCounterEndValue);        
+        
+ 
+    pauseCounterEndValue = (analogRead(3) / (1023/pauseCounterNoOfSteps)); if (pauseCounterEndValue > 0) {  pauseCounterEndValue--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
+      // protect from 
+    if (pauseCounter > pauseCounterEndValue) {
+      pauseCounter = pauseCounterEndValue;
     }
     
-    previousPatternPlace = patternPlace;
-  }
-  
+    if (pauseCounter == pauseCounterEndValue) {
+    
+      // patternType sets the type of pattern to be played in the chord matrix. Patterns "jump" up and down through the current chord matrix column. Number shows how far from the top it is.
+  patternType =          (analogRead(0) / (1023/noOfPatterns)); if (patternType > 0) {  chord--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
+ 
+      // between 0 and 16 steps that the sequence will be able to play through. A1 sets the allowed lenght of the played pattern
+  patternPlayLength =    (analogRead(1) / (1023/patternLength)); if (patternPlayLength > 0) {  patternPlayLength--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
 
-  
-  
-  
-  
-  // patternType sets the type of pattern to be played in the chord matrix. Patterns "jump" vertically through the current chord matrix column.
-  //patternType = (analogRead(0) >> 5);   
-  patternType = (analogRead(0) / (1023/noOfPatterns)); if (patternType > 0) {  chord--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
+    // A2 is used to set a transposition number for the output note. It selects its transposition value in an array of "good sounding" steps.
+//  transposeValue =       (analogRead(2) / (1023/noOfTranspositions)); if (transposeValue > 0) {  transposeValue--; } // deal with zero indexing on addressing the array vs the integer declared to set the number. 
+ 
+      // 9 steps x-axis. place sets the column to be played in the chord matrix. different versions of the same chord.
+  place =             (analogRead(2) / (1023/noOfplaces)); if (place > 0) {  place--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
+      
 
-  // 9 steps x-axis 
-  // place sets the column to be played in the chord matrix. different versions of the same chord.
-  place = (analogRead(3) / (1023/noOfplaces)); if (place > 0) {  place--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
+      // Gate high for D0 on each output signal
+  digitalWrite(digPin[0], HIGH); digitalWrite(digPin[0], LOW);
+    
+      // patternValue is the current Y-axis place in the chord matrix. patternPlace advances by 1 for each loop.
+  patternValue = pattern[patternType][patternPlace];    
+  transpose = transpositions[transposeValue];
   
-  // between 0 and 16 steps that the sequence will be able to play through. A1 sets the allowed lenght of the played pattern
-  patternPlayLength = (analogRead(1) / (1023/patternLength)); if (patternPlayLength > 0) {  patternPlayLength--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
-
-  if (clkState == HIGH) {
-    clkState = LOW;
+     //  Serial.print("patternType"); Serial.println(patternType);
     
-    // Gate high for D0 on each output signal
-    digitalWrite(digPin[0], HIGH); digitalWrite(digPin[0], LOW);
-    
-    // patternValue is the current Y-axis place in the chord matrix. patternPlace advances by 1 for each loop.
-    patternValue = pattern[patternType][patternPlace];    
-    
-    Serial.print("patternPlayLength"); Serial.println(patternPlayLength);
-//    Serial.print("chord"); Serial.println(chord);
-//    Serial.print("place"); Serial.println(place);  
-    
-    // play
-    int note = (((chords[patternValue][place]) * 4) + (12)); //    int note = (((chords[patternValue][place]) * 4) + (12 * 4));
-    dacOutput(note);
+     // play
+  int note = (((chords[patternValue + transpose][place]) * 4) + (12)); //    int note = (((chords[patternValue][place]) * 4) + (12 * 4));
+  dacOutput(note);
 
     
     // gate high for D1 only if the note changes from last time
-    if (previousNote != note) {
-      digitalWrite(digPin[1], HIGH);   
-      digitalWrite(digPin[1], LOW);
-    }
+  if (previousNote != note) {
+    digitalWrite(digPin[1], HIGH);   
+    digitalWrite(digPin[1], LOW);
+  }
     
-    previousNote = note;
+  previousNote = note;
 
     // advance one step in pattern
-    patternPlace++;
+  patternPlace++;
                         
 
     
-    // when the pattern has reached its final note in the pattern series
-    if (patternPlace >= patternPlayLength ) {
-      patternPlace = 0;
+    // when the pattern has reached its final note in the pattern series, determined by A1 (setting number of steps in the sequence)
+  if (patternPlace >= patternPlayLength+1 ) {
+    patternPlace = 0;
+    pauseCounter = 0;
+  } // pattern has reached its final note
+} // pauseCounter if statement ends
 
-      } // pattern has reached its final note
-  } // clock high ends
-  
-  
-  
-  
-  
+else {
+  pauseCounter++;
+}
+
+} // clock high ends  
 } // loop
 
 
