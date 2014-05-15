@@ -181,7 +181,7 @@ if (clkState == HIGH) {
         
  
     pauseCounterEndValue = (analogRead(3) / (1023/pauseCounterNoOfSteps)); if (pauseCounterEndValue > 0) {  pauseCounterEndValue--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
-      // protect from 
+  
     if (pauseCounter > pauseCounterEndValue) {
       pauseCounter = pauseCounterEndValue;
     }
@@ -195,7 +195,7 @@ if (clkState == HIGH) {
   patternPlayLength =    (analogRead(1) / (1023/patternLength)); if (patternPlayLength > 0) {  patternPlayLength--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
 
     // A2 is used to set a transposition number for the output note. It selects its transposition value in an array of "good sounding" steps.
-//  transposeValue =       (analogRead(2) / (1023/noOfTranspositions)); if (transposeValue > 0) {  transposeValue--; } // deal with zero indexing on addressing the array vs the integer declared to set the number. 
+    //  transposeValue =       (analogRead(2) / (1023/noOfTranspositions)); if (transposeValue > 0) {  transposeValue--; } // deal with zero indexing on addressing the array vs the integer declared to set the number. 
  
       // 9 steps x-axis. place sets the column to be played in the chord matrix. different versions of the same chord.
   place =             (analogRead(2) / (1023/noOfplaces)); if (place > 0) {  place--; } // deal with zero indexing on addressing the array vs the integer declared to set the number.
